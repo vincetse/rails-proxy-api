@@ -22,6 +22,10 @@ resource "heroku_app" "app" {
   buildpacks = [
     "heroku/ruby"
   ]
+
+  config_vars = {
+    NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = "true"
+  }
 }
 
 # Postgresql
