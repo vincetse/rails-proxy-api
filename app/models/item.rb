@@ -1,6 +1,6 @@
 class Item < ActiveResource::Base
   # upstream
-  self.site = "https://vt-todos-api.herokuapp.com/todos/:todo_id"
+  self.site = ENV["UPSTREAM"] + "/todos/:todo_id"
 
   # model association
   belongs_to :todo

@@ -1,6 +1,6 @@
 class Todo < ActiveResource::Base
   # upstream
-  self.site = "https://vt-todos-api.herokuapp.com"
+  self.site = ENV["UPSTREAM"]
 
   # model association
   has_many :items
