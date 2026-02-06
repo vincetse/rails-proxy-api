@@ -1,14 +1,22 @@
 module ExceptionHandler
-  # provides the more graceful `included` method
   extend ActiveSupport::Concern
 
   included do
-    rescue_from ActiveRecord::RecordNotFound do |e|
-      json_response({ message: e.message }, :not_found)
+    # 1. Handle "Not Found" errors
+    # ActiveResource raises ActiveResource::ResourceNotFound (404)
+    rescue_from ActiveResource::ResourceNotFound do |e|
+      render json: { message: e.message }, status: :not_found
     end
 
-    rescue_from ActiveRecord::RecordInvalid do |e|
-      json_response({ message: e.message }, :unprocessable_entity)
+    # 2. Handle "Invalid Record" errors
+    # ActiveResource raises ActiveResource::ResourceInvalid (422)
+    rescue_from ActiveResource::ResourceInvalid do |e|
+      render json: { message: e.message }, status: :unprocessable_entity
+    end
+
+    # 3. Handle Connection Errors (Optional but recommended)
+    rescue_from ActiveResource::ConnectionError, Errno::ECONNREFUSED do |e|
+      render json: { message: "Upstream API is unavailable" }, status: :service_unavailable
     end
   end
 end

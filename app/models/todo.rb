@@ -1,7 +1,4 @@
-class Todo < ActiveResource::Base
-  # upstream
-  self.site = ENV["UPSTREAM"]
-
+class Todo < RemoteResource
   # model association
   has_many :items
 

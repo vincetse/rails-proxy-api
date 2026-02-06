@@ -1,6 +1,7 @@
-class Item < ActiveResource::Base
-  # upstream
-  self.site = ENV["UPSTREAM"] + "/todos/:todo_id"
+class Item < RemoteResource
+  # We override the site to include the nesting pattern
+  # Note: ActiveResource uses :todo_id as a placeholder
+  self.site = "#{ENV.fetch('UPSTREAM', 'http://localhost:3000')}/todos/:todo_id"
 
   # model association
   belongs_to :todo

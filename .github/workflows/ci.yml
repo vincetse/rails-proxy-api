@@ -1,0 +1,63 @@
+# https://gorails.com/episodes/github-actions-continuous-integration-ruby-on-rails
+# https://boringrails.com/articles/building-a-rails-ci-pipeline-with-github-actions/
+name: CI
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      webdb:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: webdb
+          POSTGRES_PASSWORD: p0stgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      web:
+        image: ghcr.io/vincetse/todos-api
+        env:
+          PORT: 3000
+          RAILS_ENV: production
+          RAILS_LOG_TO_STDOUT: true
+          DATABASE_URL: postgres://postgres:p0stgres@webdb/webdb
+          SECRET_KEY_BASE: 450c29d2711c276c61d341bc666c87e995470f4c834ba68dea5cd0b9bca3c023a2f8de44b0c9e2122ec65e7272a8aab2fde9f9b62225a6ee60bea11504536a45
+        ports:
+        - "4000:3000"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.8
+
+      - name: Ruby gem cache
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Install gems
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Build and run tests
+        env:
+          UPSTREAM: http://web:4000
+          RAILS_ENV: test
+        run: |
+          bundle exec rspec
+
+      - uses: qltysh/qlty-action/coverage@v2
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage/.resultset.json

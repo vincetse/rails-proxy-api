@@ -1,0 +1,107 @@
+services:
+  apidb:
+    image: "ghcr.io/infrastructure-as-code/postgres:18-alpine"
+    environment:
+      POSTGRES_DB: "apidb"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgr3s
+
+  api:
+    image: "ghcr.io/vincetse/rails-proxy-api"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      UPSTREAM: "http://web:3000"
+      PORT: "3000"
+      RAILS_ENV: "production"
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: "postgres://postgres:postgr3s@apidb/apidb"
+      PGSSLMODE: "require"
+      SECRET_KEY_BASE: "2deb68ccfd3e1e174502d73edccf97135c220f5ae54a457722327b9acc6d0e6134ca896178ef87398b39916a4e6a5557a7c86630f39bae29ac4a2e7f313e2300"
+    ports:
+    - "3000:3000"
+    #command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+    command:
+    - "foreman"
+    - "run"
+    - "web"
+    depends_on:
+    - "apidb"
+    - "web"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: "10s"
+        order: "start-first"
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "256Mi"
+        reservations:
+          cpus: "0.50"
+          memory: "256Mi"
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+        max_attempts: 3
+        window: "60s"
+
+  # Upstream API service and db
+  db:
+    image: "ghcr.io/infrastructure-as-code/postgres:18-alpine"
+    environment:
+      POSTGRES_DB: "app"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p0stgres
+
+  migrate:
+    image: "ghcr.io/vincetse/todos-api"
+    environment:
+      RAILS_ENV: "production"
+      DATABASE_URL: "postgres://postgres:p0stgres@db/app"
+      SECRET_KEY_BASE: "450c29d2711c276c61d341bc666c87e995470f4c834ba68dea5cd0b9bca3c023a2f8de44b0c9e2122ec65e7272a8aab2fde9f9b62225a6ee60bea11504536a45"
+    command:
+    - "foreman"
+    - "run"
+    - "release"
+    depends_on:
+    - "db"
+    deploy:
+      restart_policy:
+        condition: "none"
+        max_attempts: 0
+
+  web:
+    image: "ghcr.io/vincetse/todos-api"
+    environment:
+      PORT: "3000"
+      RAILS_ENV: "production"
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: "postgres://postgres:p0stgres@db/app"
+      SECRET_KEY_BASE: "450c29d2711c276c61d341bc666c87e995470f4c834ba68dea5cd0b9bca3c023a2f8de44b0c9e2122ec65e7272a8aab2fde9f9b62225a6ee60bea11504536a45"
+    command:
+    - "foreman"
+    - "run"
+    - "web"
+    depends_on:
+    - "db"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: "10s"
+        order: "start-first"
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "256Mi"
+        reservations:
+          cpus: "0.50"
+          memory: "256Mi"
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+        max_attempts: 3
+        window: "60s"
