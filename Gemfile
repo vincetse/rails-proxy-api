@@ -32,9 +32,6 @@ end
 
 group :development do
   gem 'listen', '>= 3.0.5'
-  # Spring is often optional in Rails 8, but kept if you prefer it
-  gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
 end
 
 # Windows compatibility
@@ -53,3 +50,6 @@ gem "health_check"
 group :production do
   gem 'newrelic_rpm'
 end
+
+# Cors
+gem 'rack-cors', '~> 3.0'
