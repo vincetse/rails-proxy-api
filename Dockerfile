@@ -4,6 +4,7 @@ FROM registry.hub.docker.com/library/ruby:3.4.8-slim AS builder
 RUN \
   apt-get update -qq && \
   apt-get install -y -qq \
+    --no-install-recommends \
     build-essential \
     libpq-dev \
     libxml2-dev \
