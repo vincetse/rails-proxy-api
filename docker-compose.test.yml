@@ -1,0 +1,41 @@
+services:
+  db:
+    image: "ghcr.io/infrastructure-as-code/postgres:18-alpine"
+    environment:
+      POSTGRES_DB: "app"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p0stgres
+
+  web:
+    image: "ghcr.io/vincetse/todos-api"
+    environment:
+      PORT: "3000"
+      RAILS_ENV: "production"
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: "postgres://postgres:p0stgres@db/app"
+      SECRET_KEY_BASE: "450c29d2711c276c61d341bc666c87e995470f4c834ba68dea5cd0b9bca3c023a2f8de44b0c9e2122ec65e7272a8aab2fde9f9b62225a6ee60bea11504536a45"
+    command:
+    - "foreman"
+    - "start"
+    depends_on:
+    - "db"
+    ports:
+    - "3000:3000"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: "10s"
+        order: "start-first"
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "256Mi"
+        reservations:
+          cpus: "0.50"
+          memory: "256Mi"
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+        max_attempts: 3
+        window: "60s"
