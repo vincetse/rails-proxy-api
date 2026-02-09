@@ -1,5 +1,6 @@
 # Proxy API
 
+An exercise to create a perfectly useless service to satisfy my curiosity about ActiveResource.
 
 ## References
 

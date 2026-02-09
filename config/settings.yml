@@ -1,0 +1,11 @@
+default: &default
+  upstream_url: <%= ENV.fetch("UPSTREAM_URL") %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

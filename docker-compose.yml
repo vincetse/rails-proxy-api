@@ -1,31 +1,20 @@
 services:
-  apidb:
-    image: "ghcr.io/infrastructure-as-code/postgres:18-alpine"
-    environment:
-      POSTGRES_DB: "apidb"
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgr3s
-
   api:
     image: "ghcr.io/vincetse/rails-proxy-api"
     build:
       context: .
       dockerfile: ./Dockerfile
     environment:
-      UPSTREAM: "http://web:3000"
+      UPSTREAM_URL: "http://web:3000"
       PORT: "3000"
       RAILS_ENV: "production"
       RAILS_LOG_TO_STDOUT: "true"
-      DATABASE_URL: "postgres://postgres:postgr3s@apidb/apidb"
-      PGSSLMODE: "require"
       SECRET_KEY_BASE: "2deb68ccfd3e1e174502d73edccf97135c220f5ae54a457722327b9acc6d0e6134ca896178ef87398b39916a4e6a5557a7c86630f39bae29ac4a2e7f313e2300"
     ports:
     - "3000:3000"
-    #command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
     command:
     - "foreman"
-    - "run"
-    - "web"
+    - "start"
     depends_on:
     - "apidb"
     - "web"

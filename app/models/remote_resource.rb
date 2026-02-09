@@ -1,4 +1,3 @@
 class RemoteResource < ActiveResource::Base
-  # Fallback to a default if UPSTREAM is missing
-  self.site = ENV.fetch('UPSTREAM', 'http://localhost:3000')
+  self.site = Rails.application.config_for(:settings).upstream_url
 end

@@ -1,5 +1,0 @@
-# This application is a Proxy API and does not use a local database.
-# Data is fetched via ActiveResource from the UPSTREAM service.
-#
-# If you ever need to add a database back, re-enable 'active_record/railtie'
-# in config/application.rb and add the 'pg' gem back to the Gemfile.
