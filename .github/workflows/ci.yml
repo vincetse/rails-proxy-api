@@ -21,7 +21,7 @@ jobs:
         - "5432:5432"
 
       web:
-        image: ghcr.io/vincetse/todos-api
+        image: ghcr.io/vincetse/todos-api@sha256:5f691636f38477849e4d1ef2a6f1565953da003667ade7ec236a7f75631d0aeb
         env:
           PORT: 3000
           RAILS_ENV: production
