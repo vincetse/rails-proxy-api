@@ -2,6 +2,7 @@
 # https://boringrails.com/articles/building-a-rails-ci-pipeline-with-github-actions/
 name: CI
 on: [push, pull_request]
+permissions: {}
 jobs:
   ci:
     runs-on: ubuntu-latest
