@@ -1,31 +1,50 @@
-require 'active_resource'
-
 module ExceptionHandler
   extend ActiveSupport::Concern
 
   included do
-    # 1. Handle 404 specifically (Since 'ResourceNotFound' exists in your list)
-    rescue_from ActiveResource::ResourceNotFound do |e|
-      render json: { message: e.message }, status: :not_found
-    end
-
-    # 2. Handle 409 specifically (Since 'ResourceConflict' exists in your list)
-    rescue_from ActiveResource::ResourceConflict do |e|
-      render json: { message: e.message }, status: :conflict
-    end
-
-    # 3. Handle everything else (including 422) via ClientError
-    rescue_from ActiveResource::ClientError do |e|
-      if e.response.code.to_i == 422
-        render json: { message: e.message }, status: :unprocessable_entity
-      else
-        render json: { message: "Upstream error: #{e.message}" }, status: e.response.code.to_i
-      end
-    end
-
-    # 4. Handle 5xx errors
+    # --- 1. Top Level / Generic Errors ---
+    # Catches 5xx errors
     rescue_from ActiveResource::ServerError do |e|
-      render json: { message: "Upstream server is currently unavailable" }, status: :service_unavailable
+      render json: { message: "Remote Server Error: #{e.message}" }, status: :bad_gateway
+    end
+
+    # Catches Connection/Network issues
+    rescue_from ActiveResource::ConnectionError,
+                ActiveResource::TimeoutError,
+                ActiveResource::SSLError,
+                ActiveResource::ConnectionRefusedError do |e|
+      render json: { message: "Network Error: #{e.message}" }, status: :service_unavailable
+    end
+
+    # --- 2. Broad Client Errors (4xx) ---
+    # This acts as a default for any 4xx not specified below
+    rescue_from ActiveResource::ClientError do |e|
+      render json: { message: "Client Error: #{e.message}" }, status: :unprocessable_entity
+    end
+
+    # --- 3. Specific Client Errors (Checked FIRST because they are at the BOTTOM) ---
+    rescue_from ActiveResource::UnauthorizedAccess do |e|
+      render json: { message: "Unauthorized: #{e.message}" }, status: :unauthorized
+    end
+
+    rescue_from ActiveResource::ForbiddenAccess do |e|
+      render json: { message: "Forbidden: #{e.message}" }, status: :forbidden
+    end
+
+    rescue_from ActiveResource::ResourceConflict do |e|
+      render json: { message: "Conflict/Validation Failed: #{e.message}" }, status: :unprocessable_entity
+    end
+
+    rescue_from ActiveResource::TooManyRequests do |e|
+      render json: { message: "Rate limit exceeded. Try again later." }, status: :too_many_requests
+    end
+
+    rescue_from ActiveResource::ResourceNotFound do |e|
+      render json: { message: "Not Found." }, status: :not_found
+    end
+
+    rescue_from ActiveResource::MissingPrefixParam do |e|
+      render json: { message: "Developer Error: Nested resource ID missing." }, status: :internal_server_error
     end
   end
 end

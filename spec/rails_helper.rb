@@ -1,5 +1,30 @@
 require 'spec_helper'
 ENV['RAILS_ENV'] ||= 'test'
+require 'uri'
+# 1. Check for presence
+if ENV['UPSTREAM_URL'].nil? || ENV['UPSTREAM_URL'].strip.empty?
+  abort <<~ERROR
+
+    =======================================================================
+    FATAL: UPSTREAM_URL is not set!
+    The RemoteResource models require this to build API paths.
+
+    LOCAL: Add 'UPSTREAM_URL=http://localhost:3000' to your .env.test file.
+    CI: Add 'UPSTREAM_URL' to your GitHub Actions secrets or env section.
+    =======================================================================
+  ERROR
+end
+
+# 2. Check for basic URI validity
+begin
+  uri = URI.parse(ENV['UPSTREAM_URL'])
+  unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+    abort "FATAL: UPSTREAM_URL '#{ENV['UPSTREAM_URL']}' must start with http:// or https://"
+  end
+rescue URI::InvalidURIError
+  abort "FATAL: UPSTREAM_URL '#{ENV['UPSTREAM_URL']}' is not a valid URI."
+end
+
 require File.expand_path('../../config/environment', __FILE__)
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'

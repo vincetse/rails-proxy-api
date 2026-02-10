@@ -17,6 +17,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+        - "5432:5432"
 
       web:
         image: ghcr.io/vincetse/todos-api
@@ -52,7 +54,7 @@ jobs:
 
       - name: Build and run tests
         env:
-          UPSTREAM: http://web:4000
+          UPSTREAM_URL: http://localhost:4000
           RAILS_ENV: test
         run: |
           bundle exec rspec

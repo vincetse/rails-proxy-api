@@ -9,8 +9,16 @@ class TodosController < ApplicationController
 
   # POST /todos
   def create
-    @todo = Todo.create!(todo_params)
-    json_response(@todo, :created)
+    @todo = Todo.new(todo_params)
+    if @todo.save
+      json_response(@todo, :created)
+    else
+      # This returns the errors from the remote API
+      json_response(@todo.errors, :unprocessable_entity)
+    end
+  rescue ActiveResource::ResourceInvalid => e
+    # This catches the 422 error from the API specifically
+    render json: { message: e.message }, status: :unprocessable_entity
   end
 
   # GET /todos/:id
@@ -20,8 +28,12 @@ class TodosController < ApplicationController
 
   # PUT /todos/:id
   def update
-    @todo.update(todo_params)
-    head :no_content
+    @todo = Todo.find(params[:id])
+    if @todo.update_attributes(todo_params)
+      head :no_content
+    else
+      render json: @todo.errors, status: :unprocessable_entity
+    end
   end
 
   # DELETE /todos/:id
